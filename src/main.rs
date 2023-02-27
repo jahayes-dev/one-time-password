@@ -14,7 +14,7 @@ use std::{
 };
 use url::Url;
 
-use one_time_password::OTP;
+use one_time_password::Otp;
 
 const FILE_MAGIC: &[u8; 20] = b"one-time-password-v1";
 const SERVICE: &str = "com.code-spelunking.one-time-password.file-key";
@@ -68,7 +68,7 @@ enum Error {
     MissingOtpAuthUrl,
 
     #[error("one time password error")]
-    OTP(#[from] one_time_password::Error),
+    Otp(#[from] one_time_password::Error),
 }
 
 #[derive(Debug, Clone)]
@@ -116,7 +116,7 @@ impl Payload {
 
     fn metadata(&self, key: impl AsRef<str>) -> Result<bool, Error> {
         let url = self.items.get(key.as_ref()).ok_or(Error::MissingItem)?;
-        for (key, mut value) in OTP::metadata(url)? {
+        for (key, mut value) in Otp::metadata(url)? {
             if key == "secret" {
                 value = "*".repeat(value.len())
             }
@@ -128,7 +128,7 @@ impl Payload {
     fn password(&mut self, key: impl AsRef<str>, poll: bool) -> Result<bool, Error> {
         let url = self.items.get_mut(key.as_ref()).ok_or(Error::MissingItem)?;
 
-        let mut otp = OTP::load(url)?;
+        let mut otp = Otp::load(url)?;
         loop {
             let (pass, expires) = otp.next_password_and_expire_time();
             println!("{}", pass);

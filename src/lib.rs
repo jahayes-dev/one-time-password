@@ -55,13 +55,13 @@ pub enum Error {
 }
 
 #[derive(Debug)]
-pub struct OTP {
+pub struct Otp {
     hash: Hash,
     digits: Digits,
     counter: Counter,
 }
 
-impl OTP {
+impl Otp {
     fn password_for_counter(&self, count: u64) -> String {
         self.digits.format(self.hash.code(count))
     }
@@ -237,6 +237,7 @@ impl Counter {
     fn save(&self, url: &mut Url) -> bool {
         match self {
             Self::Event { count } => {
+                #[allow(clippy::needless_collect)]
                 let new: Vec<_> = url
                     .query_pairs()
                     .map(|(k, v)| {
@@ -293,7 +294,7 @@ fn counter_expires(counter: u64, period: u64) -> SystemTime {
 
 #[cfg(test)]
 mod tests {
-    use super::{counter_expires, time_to_counter, Counter, Digits, Hash, OTP};
+    use super::{counter_expires, time_to_counter, Counter, Digits, Hash, Otp};
     use std::time::{Duration, SystemTime};
     use url::Url;
 
@@ -304,7 +305,7 @@ mod tests {
     #[test]
     fn totp_load_url() {
         let url = Url::parse("otpauth://totp/ACME%20Co:john.doe@email.com?secret=HXDMVJECJJWSRB3HWIZR4IFUGFTMXBOZ&issuer=ACME%20Co&algorithm=SHA1&digits=6&period=30").expect("valid url");
-        let otp = OTP::load(&url).expect("to parse");
+        let otp = Otp::load(&url).expect("to parse");
         assert!(matches!(otp.hash, Hash::Sha1(_)));
         assert_eq!(otp.digits, Digits::Six);
         assert_eq!(otp.counter, Counter::Time { period: 30 });
@@ -313,7 +314,7 @@ mod tests {
     #[test]
     fn hotp_load_url() {
         let url = Url::parse("otpauth://hotp/ACME%20Co:john.doe@email.com?secret=HXDMVJECJJWSRB3HWIZR4IFUGFTMXBOZ&issuer=ACME%20Co&algorithm=SHA1&digits=6&counter=12345").expect("valid url");
-        let otp = OTP::load(&url).expect("valid");
+        let otp = Otp::load(&url).expect("valid");
         assert!(matches!(otp.hash, Hash::Sha1(_)));
         assert_eq!(otp.digits, Digits::Six);
         assert_eq!(otp.counter, Counter::Event { count: 12345 });
@@ -322,7 +323,7 @@ mod tests {
     #[test]
     fn totp_load_url_example() {
         let url = Url::parse("otpauth://totp/Test%20Inc.:fred%40example.com?secret=fvcamutxjsuszoylk7kdez6pcua3yfcvtgmk5eufqzxmajqejpuoqvzc&algorithm=SHA256&digits=9&period=15&lock=false").expect("valid url");
-        let otp = OTP::load(&url).expect("to parse");
+        let otp = Otp::load(&url).expect("to parse");
         assert!(matches!(otp.hash, Hash::Sha256(_)));
         assert_eq!(otp.digits, Digits::Nine);
         assert_eq!(otp.counter, Counter::Time { period: 15 });
