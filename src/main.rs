@@ -221,7 +221,6 @@ fn read_qr_code(path: impl AsRef<Path>) -> Result<Url, Error> {
     let mut img = rqrr::PreparedImage::prepare(img);
     for grids in img.detect_grids() {
         let (_, content) = grids.decode()?;
-        println!("content: {content}");
         match Url::parse(&content) {
             Ok(url) if url.scheme() == "otpauth" => return Ok(url),
             _ => println!("not a otpauth:// url: {content}"),
